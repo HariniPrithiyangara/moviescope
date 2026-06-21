@@ -2,6 +2,14 @@
 
 MovieScope is a premium movie finder web application built using **Next.js 15 (App Router)**, **React 19**, **Tailwind CSS**, and **Lucide React**. It integrates with the **OMDb API** to query movies and details, features a local-storage **favorites/watchlist manager**, supports **dark/light modes**, and implements a **client-side caching layer** to stay within the API's daily request limit.
 
+## 🚀 Live Demo
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-moviescope--three.vercel.app-6366f1?style=for-the-badge&logo=vercel&logoColor=white)](https://moviescope-three.vercel.app/)
+
+> 🌐 **[https://moviescope-three.vercel.app/](https://moviescope-three.vercel.app/)**
+
+---
+
 ## Features
 
 - 🔍 **Dynamic Movie Search**: Quick search by title, director, or actor, with hover glows and interactive suggested tag chips (`Interstellar`, `Dune`, `Oppenheimer`, `The Batman`).
