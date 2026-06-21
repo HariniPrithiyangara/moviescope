@@ -53,7 +53,7 @@ export default function Home() {
     setCurrentPage(1);
   };
 
-  const totalPages = Math.ceil(totalResults / 10); // OMDb returns 10 items per page
+  const totalPages = Math.ceil(totalResults / 12); // R1: exactly 12 results per page
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -111,7 +111,7 @@ export default function Home() {
 
           {/* Grid Layout or Fallbacks */}
           {loading ? (
-            <MovieGridSkeleton count={8} />
+            <MovieGridSkeleton count={12} />
           ) : error ? (
             <div className="flex flex-col items-center justify-center text-center py-20 px-4 glass-card border border-rose-500/10 rounded-2xl mt-10">
               <div className="p-4 rounded-full bg-rose-500/10 dark:bg-rose-500/5 text-rose-500 border border-rose-500/20 mb-4 animate-bounce">
@@ -177,10 +177,13 @@ export default function Home() {
             <p className="hidden sm:block">© 2026 MovieScope. All rights reserved.</p>
           </div>
           <p className="sm:hidden text-center">© 2026 MovieScope. All rights reserved.</p>
-          <div className="flex items-center gap-4.5 sm:gap-6">
-            <span className="hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors duration-200">Privacy</span>
-            <span className="hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors duration-200">Terms</span>
-            <span className="hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors duration-200">OMDb API</span>
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+            <span className="text-indigo-500 dark:text-indigo-400 font-bold tracking-wide">Built for Jeevan — Harini Prithiyangara B</span>
+            <div className="flex items-center gap-4">
+              <span className="hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors duration-200">Privacy</span>
+              <span className="hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors duration-200">Terms</span>
+              <span className="hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors duration-200">OMDb API</span>
+            </div>
           </div>
         </div>
       </footer>

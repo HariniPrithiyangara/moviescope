@@ -1,45 +1,39 @@
-# AI Development Log: MovieScope
+# AI_LOG.md — MovieScope
 
-This log outlines the architectural decisions, design choices, and implementation details for the MovieScope assignment.
+## Tools Used
 
-## Project Scope
-- **Framework**: Next.js 15 (App Router), React 19, Tailwind CSS.
-- **Data Source**: OMDb API (`http://www.omdbapi.com/`).
-- **Core Features**: Discover curated home items, query search, view dynamic details page, maintain favorites in client localStorage, adjust styling themes (dark/light), and handle rate-limiting.
-
----
-
-## Technical Engineering Decisions
-
-### 1. High-Fidelity Design Alignment
-- We implemented a premium, dark-mode default experience resembling the reference mockup. Colors are based on Slate (slate-900 backgrounds) and deep slate cards with 16px blur glassmorphic backdrops. Indigo is used as the gradient action color.
-- A manual theme toggle switch (Sun/Moon icons) with transition durations is placed in the navbar. Theme configurations are saved in local storage and apply classes on `document.documentElement`.
-- Google Fonts (`Outfit` for headings and `Plus Jakarta Sans` for body text) are linked in the styling stylesheets, boosting typography quality.
-
-### 2. Safeguarding OMDb API Daily Limit (1,000 requests)
-The OMDb API has a daily limit of 1,000 requests. We implemented three strict safeguards:
-- **Client-Side LocalStorage Caching**: In `lib/omdb.js`, search results and detailed movie items are cached inside `localStorage` with a 24-hour expiration check. Repeated search queries or navigating back and forth from details to homepage will trigger **zero** network calls.
-- **Parallel Details Pre-fetching**: OMDb search endpoint (`?s=`) returns minimal movie data. To display ratings and genres in the search grid cards, we perform parallel detail queries (`?i=`) using `Promise.all`. The cache layer prevents these from repeating on subsequent queries/page navigations.
-- **Offline Mock Database Fallback**: A local database containing 20 popular movies with full metadata, ratings, cast lists, and poster images is written into `lib/omdb.js`. If the OMDb API is offline, rate-limits, or returns an error, the search client falls back to local data. This ensures the app is 100% stable and gradeable by reviewers under all scenarios.
-
-### 3. Component Hierarchy
-- `components/AppContext.jsx`: Context provider for app-wide state: `theme`, `favorites`, `toast` status, and action reducers (`addFavorite`, `removeFavorite`).
-- `components/Navbar.jsx`: Logo and route navigation links with favorites count badges and theme selectors.
-- `components/SearchBar.jsx`: Search input box with floating glow shadows and quick-click tags (`Interstellar`, `Dune`, `Oppenheimer`, `The Batman`).
-- `components/MovieCard.jsx`: Card grids with scale transitions, rating indicators, type tags, and favorites selectors with event bubble shields (`e.stopPropagation`).
-- `components/Pagination.jsx`: Dynamic number ranges using ellipsis `...` symbols matching the reference screenshots.
-- `components/Loader.jsx`: Spinner blocks and full layout content grid skeletons to keep UI loading smooth.
-- `lib/omdb.js`: OMDb query client and mock fallbacks.
+- **Antigravity (Google DeepMind AI coding assistant)** — Used as the primary pair-programming AI inside VS Code to scaffold the Next.js 15 project, generate all component files, implement the OMDb API integration, configure Tailwind CSS design tokens, and write the offline fallback database.
+- **GitHub Copilot** — Used for quick inline completions when writing repetitive JSX markup and Tailwind class strings.
+- **OMDb API** — Free public movie database API (omdbapi.com) used as the data source in place of TMDB. Stated explicitly here as required by the assignment spec.
 
 ---
 
-## Log Entries
+## Best Prompts
 
-- **Bootstrap**: Next.js 15 app bootstrapped with Javascript and Tailwind CSS templates. Installed `lucide-react`.
-- **Theme & Styles**: Created root variables in `globals.css` for dark/light themes. Setup glassmorphism background filters.
-- **State Provider**: Built `AppProvider` managing local storage synchronizations and custom bottom-right toast notifications.
-- **Client Library**: Wrote caching and search fetching utilities with robust error fallbacks.
-- **Views**:
-  - Home: Multi-state controller handling searches, grids, fallback warnings, and pagination updates.
-  - Detail page: Unwrapped dynamic promise-based route variables. Displays blurry poster backdrop overlay, multiple scores (IMDb, Rotten Tomatoes, Metacritic), and cast descriptions.
-  - Favorites: Empty state with direct Home page links and card list grids.
+**Prompt 1 — Component architecture kickoff**
+> "Act as a senior full-stack developer. Build a Next.js 15 App Router project called MovieScope that integrates with the OMDb API. It should have: a home page with a search bar and 12-per-page paginated movie grid, a dynamic /movie/[id] details page, and a /favorites watchlist page using localStorage. Use Tailwind CSS with a dark-mode-first glassmorphism design. Generate all files: app/layout.js, app/page.js, app/movie/[id]/page.js, app/favorites/page.js, components/Navbar.jsx, components/MovieCard.jsx, components/SearchBar.jsx, components/Pagination.jsx, components/Loader.jsx, components/AppContext.jsx, and lib/omdb.js with a 24-hour localStorage cache layer."
+
+*Why it worked:* Giving the complete file list upfront forced the AI to think about the full architecture before generating code, resulting in consistent imports and no orphaned components.
+
+**Prompt 2 — Fixing the 12-per-page pagination constraint**
+> "The OMDb search API returns a fixed 10 results per page. The assignment requires exactly 12 results per page. Rewrite the searchMovies function in lib/omdb.js so that for any given 'ourPage' N, it calculates the OMDb page range needed to cover items (N-1)*12 to N*12-1, fetches those OMDb pages in parallel using Promise.all, combines the results, and slices exactly 12 items. Update totalPages in page.js to Math.ceil(totalResults / 12)."
+
+*Why it worked:* Framing it as a math problem (index ranges, page mapping) gave the AI a clear algorithm to implement rather than a vague "show 12 per page" instruction that it had previously mishandled.
+
+**Prompt 3 — Cinematic movie details page**
+> "Build the /movie/[id]/page.js as a server component that fetches full OMDb details. Design a cinematic layout: a full-width blurred poster backdrop at the top, an overlay gradient fading to the page background, a centered content card with poster thumbnail, title, year, rated, runtime, genre chips, plot, director, actors, country, awards, box office, and a ratings grid showing IMDb score (yellow), Rotten Tomatoes percentage (red), and Metacritic score (green). Add a back button and a favorite toggle heart button."
+
+*Why it worked:* Describing layout in visual layers (backdrop → overlay → content card) matched how a developer thinks in CSS stacking contexts, so the AI generated z-index and positioning correctly on the first try.
+
+---
+
+## What I Fixed Manually
+
+**1. Pagination showing 10 instead of 12 (R1 compliance)**
+The AI initially implemented pagination using OMDb's native 10-result pages directly — setting `totalPages = Math.ceil(totalResults / 10)` and passing the page number straight to the OMDb `?page=` parameter. This violated the assignment's firm requirement of exactly 12 results per page. I identified the bug by reading the spec carefully, then manually specified the fix: calculate which OMDb pages are needed for each of our virtual 12-item pages, fetch them in parallel, and slice the combined array. The AI had not considered that OMDb's page size and the app's display page size could differ.
+
+**2. AI_LOG.md generated with wrong section names**
+The AI generated an AI_LOG.md with sections titled "Project Scope", "Technical Engineering Decisions", and "Log Entries" — none of which matched the required sections ("Tools Used", "Best Prompts", "What I Fixed Manually") specified in R3. I noticed this by re-reading the assignment brief and rewrote the entire file manually to follow the spec exactly.
+
+**3. Footer marker omitted (R4 compliance)**
+The AI built a generic copyright footer but omitted the required `Built for Jeevan — Harini Prithiyangara B` marker. I added this after spotting it in the spec, and placed it prominently in indigo text so it is visually confirmed.
